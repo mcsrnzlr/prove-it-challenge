@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PROVE IT">
+    <meta name="description" content="21-Tage PROVE IT Challenge - Tracking Dashboard">
+    
+    <title>PROVE IT Challenge</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- React and Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overscroll-behavior: none;
+        }
+        
+        #root {
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+        }
+        
+        /* Loading screen */
+        #loading {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(to bottom right, #0a0a0a, #171717, #0a0a0a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: white;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        
+        .loader {
+            text-align: center;
+        }
+        
+        .loader-icon {
+            font-size: 48px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        
+        .loader-text {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #06B6D4;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <div class="loader">
+            <div class="loader-icon">🎯</div>
+            <div class="loader-text">PROVE IT lädt...</div>
+        </div>
+    </div>
+    
+    <div id="root"></div>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+    
+    <!-- React Component -->
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { CheckCircle2, Circle, TrendingUp, Flame, Target, Calendar, Award, AlertCircle, Download, Upload, Trash2 } = lucide;
+
+        function ProveItDashboard() {
+          const [currentDay, setCurrentDay] = useState(1);
+          const [trackingData, setTrackingData] = useState(() => {
+            const saved = localStorage.getItem('proveItTracking');
+            return saved ? JSON.parse(saved) : {};
+          });
+          const [selectedDate, setSelectedDate] = useState(null);
+          const [showDetails, setShowDetails] = useState(false);
+          const [showMenu, setShowMenu] = useState(false);
+
+          useEffect(() => {
+            localStorage.setItem('proveItTracking', JSON.stringify(trackingData));
+          }, [trackingData]);
+          
+          useEffect(() => {
+            // Hide loading screen
+            const loading = document.getElementById('loading');
+            if (loading) {
+              loading.style.opacity = '0';
+              loading.style.transition = 'opacity 0.3s';
+              setTimeout(() => loading.remove(), 300);
+            }
+          }, []);
+
+          const phases = {
+            1: {
+              name: 'Detox & Fundament',
+              days: [1, 2, 3, 4, 5, 6, 7],
+              rules: [
+                { id: 'silence', name: 'Input-Fasten', target: '45 Min', description: 'Keine Podcasts, Videos, News - nur Gehen, Atmen, Journaling' },
+                { id: 'scroll', name: 'No Scroll', target: '0 Min', description: 'Social Media komplett aus (außer notwendige Kommunikation)' },
+                { id: 'deepwork', name: 'Deep Work', target: '60 Min', description: 'Ein fokussierter Block, Handy weg' },
+                { id: 'movement', name: 'Bewegung', target: '30 Min', description: 'Workout ODER zügiger Walk' },
+                { id: 'order', name: 'Ordnung', target: '10 Min', description: 'Aufräumen, Putzen, Strukturieren' }
+              ]
+            },
+            2: {
+              name: 'Output & Routine',
+              days: [8, 9, 10, 11, 12, 13, 14],
+              rules: [
+                { id: 'silence', name: 'Input-Fasten', target: '60 Min', description: 'Erweitert auf volle Stunde' },
+                { id: 'scroll', name: 'Controlled Scroll', target: '≤10 Min', description: 'Max 10 Min/Tag, mit Timer' },
+                { id: 'deepwork', name: 'Deep Work', target: '90 Min', description: 'Ein Block oder 2×45 Min' },
+                { id: 'movement', name: 'Aktive Tage', target: '4×/Woche', description: '4× Training + 3× Walk pro Woche' },
+                { id: 'order', name: 'Ordnung', target: '15 Min', description: 'Erweiterte Strukturierung' },
+                { id: 'courage', name: 'Mut-Aktion', target: '1×/Tag', description: 'Eine unangenehme, aber wichtige Sache erledigen' }
+              ]
+            },
+            3: {
+              name: 'Proof Season',
+              days: [15, 16, 17, 18, 19, 20, 21],
+              rules: [
+                { id: 'silence', name: 'Input-Fasten', target: '60 Min', description: 'Bleibt Pflicht' },
+                { id: 'scroll', name: 'Controlled Scroll', target: '≤10 Min', description: 'Bleibt limitiert' },
+                { id: 'deepwork', name: 'Deep Work', target: '2h', description: 'Maximale Fokuszeit für Ergebnis' },
+                { id: 'movement', name: 'Bewegung', target: '5×/Woche', description: 'Intensiv durchziehen' },
+                { id: 'order', name: 'Ordnung', target: '15 Min', description: 'Standard halten' },
+                { id: 'proof', name: 'Sichtbarer Proof', target: '1 Ziel', description: 'Ein messbares Ergebnis fertigstellen' }
+              ]
+            }
+          };
+
+          const getCurrentPhase = (day) => {
+            if (day <= 7) return 1;
+            if (day <= 14) return 2;
+            return 3;
+          };
+
+          const currentPhase = phases[getCurrentPhase(currentDay)];
+
+          const toggleRule = (day, ruleId) => {
+            setTrackingData(prev => ({
+              ...prev,
+              [day]: {
+                ...prev[day],
+                [ruleId]: !prev[day]?.[ruleId]
+              }
+            }));
+          };
+
+          const getDayScore = (day) => {
+            const phase = getCurrentPhase(day);
+            const totalRules = phases[phase].rules.length;
+            const completed = phases[phase].rules.filter(rule => trackingData[day]?.[rule.id]).length;
+            return { completed, total: totalRules };
+          };
+
+          const getStreak = () => {
+            let streak = 0;
+            for (let i = currentDay; i >= 1; i--) {
+              const score = getDayScore(i);
+              if (score.completed >= Math.ceil(score.total * 0.7)) {
+                streak++;
+              } else {
+                break;
+              }
+            }
+            return streak;
+          };
+
+          const getTotalCompletion = () => {
+            let total = 0;
+            let completed = 0;
+            for (let day = 1; day <= currentDay; day++) {
+              const score = getDayScore(day);
+              total += score.total;
+              completed += score.completed;
+            }
+            return total > 0 ? Math.round((completed / total) * 100) : 0;
+          };
+          
+          const exportData = () => {
+            const dataStr = JSON.stringify(trackingData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `prove-it-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+          };
+          
+          const importData = () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'application/json';
+            input.onchange = (e) => {
+              const file = e.target.files[0];
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                try {
+                  const imported = JSON.parse(event.target.result);
+                  setTrackingData(imported);
+                  alert('Daten erfolgreich importiert!');
+                } catch (err) {
+                  alert('Fehler beim Importieren der Daten');
+                }
+              };
+              reader.readAsText(file);
+            };
+            input.click();
+          };
+          
+          const resetData = () => {
+            if (confirm('Alle Daten wirklich löschen? Dies kann nicht rückgängig gemacht werden!')) {
+              setTrackingData({});
+              setCurrentDay(1);
+              alert('Alle Daten wurden gelöscht');
+            }
+          };
+
+          const DayCard = ({ day }) => {
+            const phase = getCurrentPhase(day);
+            const rules = phases[phase].rules;
+            const score = getDayScore(day);
+            const percentage = Math.round((score.completed / score.total) * 100);
+            const isPerfect = score.completed === score.total;
+            const isGood = percentage >= 70;
+            
+            return (
+              <div 
+                onClick={() => {
+                  setSelectedDate(day);
+                  setShowDetails(true);
+                }}
+                className={`relative p-4 rounded-lg cursor-pointer transition-all active:scale-95 ${
+                  isPerfect ? 'bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border-2 border-emerald-500' :
+                  isGood ? 'bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border-2 border-blue-400' :
+                  score.completed > 0 ? 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 border-2 border-amber-400' :
+                  'bg-neutral-800/50 border-2 border-neutral-700'
+                }`}
+              >
+                {isPerfect && (
+                  <div className="absolute -top-2 -right-2">
+                    <Award className="text-yellow-400 w-6 h-6" fill="currentColor" />
+                  </div>
+                )}
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-bold text-lg">Tag {day}</span>
+                  <span className="text-2xl font-black">{score.completed}/{score.total}</span>
+                </div>
+                <div className="w-full bg-neutral-700 rounded-full h-2 mb-2">
+                  <div 
+                    className={`h-2 rounded-full transition-all ${
+                      isPerfect ? 'bg-gradient-to-r from-emerald-400 to-teal-400' :
+                      isGood ? 'bg-gradient-to-r from-blue-400 to-cyan-400' :
+                      'bg-gradient-to-r from-amber-400 to-orange-400'
+                    }`}
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+                <p className="text-xs text-neutral-400">{percentage}% Complete</p>
+              </div>
+            );
+          };
+
+          const DetailModal = () => {
+            if (!selectedDate) return null;
+            
+            const phase = getCurrentPhase(selectedDate);
+            const rules = phases[phase].rules;
+            
+            return (
+              <div 
+                className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+                onClick={() => setShowDetails(false)}
+              >
+                <div 
+                  className="bg-neutral-900 rounded-2xl p-6 max-w-md w-full border-2 border-neutral-700 max-h-[90vh] overflow-y-auto"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-2xl font-black">Tag {selectedDate}</h3>
+                    <button 
+                      onClick={() => setShowDetails(false)}
+                      className="text-neutral-400 hover:text-white text-2xl w-8 h-8"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  
+                  <div className="mb-4 p-3 bg-neutral-800 rounded-lg">
+                    <p className="text-sm text-neutral-400 mb-1">Phase {phase}</p>
+                    <p className="font-bold">{phases[phase].name}</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    {rules.map(rule => (
+                      <div 
+                        key={rule.id}
+                        onClick={() => toggleRule(selectedDate, rule.id)}
+                        className={`p-4 rounded-lg cursor-pointer transition-all active:scale-95 ${
+                          trackingData[selectedDate]?.[rule.id]
+                            ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-2 border-emerald-500'
+                            : 'bg-neutral-800 border-2 border-neutral-700 active:border-neutral-600'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          {trackingData[selectedDate]?.[rule.id] ? (
+                            <CheckCircle2 className="w-6 h-6 text-emerald-400 flex-shrink-0 mt-1" />
+                          ) : (
+                            <Circle className="w-6 h-6 text-neutral-500 flex-shrink-0 mt-1" />
+                          )}
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="font-bold">{rule.name}</p>
+                              <span className="text-xs px-2 py-1 bg-neutral-700 rounded-full">
+                                {rule.target}
+                              </span>
+                            </div>
+                            <p className="text-sm text-neutral-400">{rule.description}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => setShowDetails(false)}
+                    className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg font-bold active:scale-95 transition-all"
+                  >
+                    Speichern
+                  </button>
+                </div>
+              </div>
+            );
+          };
+
+          return (
+            <div className="min-h-screen bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 text-white p-4 pb-20">
+              <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;600;800;900&display=swap');
+                
+                * {
+                  font-family: 'Inter', sans-serif;
+                }
+                
+                .font-mono {
+                  font-family: 'Space Mono', monospace;
+                }
+              `}</style>
+
+              {/* Header */}
+              <div className="max-w-7xl mx-auto mb-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Target className="w-8 h-8 text-cyan-400" />
+                    <div>
+                      <h1 className="text-3xl font-black bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                        PROVE IT
+                      </h1>
+                      <p className="text-neutral-400 text-sm">21-Tage Challenge</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowMenu(!showMenu)}
+                    className="p-2 bg-neutral-800 rounded-lg active:scale-95 transition-all"
+                  >
+                    <div className="w-6 h-6 flex flex-col justify-center gap-1">
+                      <div className="w-full h-0.5 bg-white rounded"></div>
+                      <div className="w-full h-0.5 bg-white rounded"></div>
+                      <div className="w-full h-0.5 bg-white rounded"></div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+              
+              {/* Menu */}
+              {showMenu && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end" onClick={() => setShowMenu(false)}>
+                  <div className="bg-neutral-900 w-full rounded-t-3xl p-6 border-t-2 border-neutral-700" onClick={e => e.stopPropagation()}>
+                    <div className="w-12 h-1 bg-neutral-700 rounded-full mx-auto mb-6"></div>
+                    <div className="space-y-3">
+                      <button
+                        onClick={() => { exportData(); setShowMenu(false); }}
+                        className="w-full flex items-center gap-3 p-4 bg-neutral-800 rounded-lg active:scale-95 transition-all"
+                      >
+                        <Download className="w-5 h-5 text-blue-400" />
+                        <span className="font-semibold">Daten exportieren</span>
+                      </button>
+                      <button
+                        onClick={() => { importData(); setShowMenu(false); }}
+                        className="w-full flex items-center gap-3 p-4 bg-neutral-800 rounded-lg active:scale-95 transition-all"
+                      >
+                        <Upload className="w-5 h-5 text-emerald-400" />
+                        <span className="font-semibold">Daten importieren</span>
+                      </button>
+                      <button
+                        onClick={() => { resetData(); setShowMenu(false); }}
+                        className="w-full flex items-center gap-3 p-4 bg-red-900/20 border-2 border-red-500 rounded-lg active:scale-95 transition-all"
+                      >
+                        <Trash2 className="w-5 h-5 text-red-400" />
+                        <span className="font-semibold text-red-400">Alle Daten löschen</span>
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => setShowMenu(false)}
+                      className="w-full mt-4 p-4 bg-neutral-800 rounded-lg font-semibold"
+                    >
+                      Schließen
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Stats Cards */}
+              <div className="max-w-7xl mx-auto grid grid-cols-2 gap-3 mb-6">
+                <div className="bg-gradient-to-br from-neutral-800 to-neutral-900 p-4 rounded-xl border-2 border-neutral-700">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Calendar className="w-4 h-4 text-blue-400" />
+                    <p className="text-xs text-neutral-400">Tag</p>
+                  </div>
+                  <p className="text-3xl font-black">{currentDay}<span className="text-neutral-500 text-lg">/21</span></p>
+                </div>
+
+                <div className="bg-gradient-to-br from-neutral-800 to-neutral-900 p-4 rounded-xl border-2 border-neutral-700">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Flame className="w-4 h-4 text-orange-400" />
+                    <p className="text-xs text-neutral-400">Streak</p>
+                  </div>
+                  <p className="text-3xl font-black">{getStreak()}</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-neutral-800 to-neutral-900 p-4 rounded-xl border-2 border-neutral-700">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp className="w-4 h-4 text-emerald-400" />
+                    <p className="text-xs text-neutral-400">Gesamt</p>
+                  </div>
+                  <p className="text-3xl font-black">{getTotalCompletion()}<span className="text-neutral-500 text-lg">%</span></p>
+                </div>
+
+                <div className="bg-gradient-to-br from-neutral-800 to-neutral-900 p-4 rounded-xl border-2 border-neutral-700">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Award className="w-4 h-4 text-yellow-400" />
+                    <p className="text-xs text-neutral-400">Perfekt</p>
+                  </div>
+                  <p className="text-3xl font-black">
+                    {Array.from({ length: currentDay }, (_, i) => i + 1).filter(day => {
+                      const score = getDayScore(day);
+                      return score.completed === score.total;
+                    }).length}
+                  </p>
+                </div>
+              </div>
+
+              {/* Phase Info */}
+              <div className="max-w-7xl mx-auto mb-6">
+                <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-2 border-blue-500 rounded-xl p-4">
+                  <p className="text-xs text-neutral-400 mb-1">Phase {getCurrentPhase(currentDay)}</p>
+                  <h2 className="text-xl font-black mb-2">{currentPhase.name}</h2>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setCurrentDay(Math.max(1, currentDay - 1))}
+                      className="flex-1 px-4 py-2 bg-neutral-800 rounded-lg active:scale-95 transition-all text-sm font-bold"
+                    >
+                      ← Zurück
+                    </button>
+                    <button
+                      onClick={() => setCurrentDay(Math.min(21, currentDay + 1))}
+                      className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg active:scale-95 transition-all text-sm font-bold"
+                    >
+                      Weiter →
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Today's Rules */}
+              <div className="max-w-7xl mx-auto mb-6">
+                <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-cyan-400" />
+                  Tag {currentDay}
+                </h3>
+                <div className="space-y-2">
+                  {currentPhase.rules.map(rule => (
+                    <div
+                      key={rule.id}
+                      onClick={() => toggleRule(currentDay, rule.id)}
+                      className={`p-4 rounded-lg cursor-pointer transition-all active:scale-95 ${
+                        trackingData[currentDay]?.[rule.id]
+                          ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-2 border-emerald-500'
+                          : 'bg-neutral-800/50 border-2 border-neutral-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        {trackingData[currentDay]?.[rule.id] ? (
+                          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                        ) : (
+                          <Circle className="w-5 h-5 text-neutral-500" />
+                        )}
+                        <span className="font-bold">{rule.name}</span>
+                        <span className="ml-auto text-xs px-2 py-1 bg-neutral-700 rounded-full font-mono">
+                          {rule.target}
+                        </span>
+                      </div>
+                      <p className="text-sm text-neutral-400 ml-8">{rule.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* All Days Grid */}
+              <div className="max-w-7xl mx-auto">
+                <h3 className="text-lg font-bold mb-3">Alle Tage</h3>
+                
+                {[1, 2, 3].map(phaseNum => (
+                  <div key={phaseNum} className="mb-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="px-2 py-1 bg-neutral-800 rounded-full text-xs font-bold">
+                        Phase {phaseNum}
+                      </div>
+                      <h4 className="text-sm font-bold text-neutral-300">{phases[phaseNum].name}</h4>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {phases[phaseNum].days.map(day => (
+                        <DayCard key={day} day={day} />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {showDetails && <DetailModal />}
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<ProveItDashboard />);
+    </script>
+</body>
+</html>
