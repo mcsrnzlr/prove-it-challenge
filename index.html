@@ -11,77 +11,383 @@
     
     <title>PROVE IT Challenge</title>
     
-    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
-    
-    <!-- Apple Touch Icon -->
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
-    
-    <!-- Manifest -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%230a0a0a'/><text x='90' y='130' font-size='120' text-anchor='middle'>🎯</text></svg>">
     <link rel="manifest" href="manifest.json">
-    
-    <!-- React and Babel -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+
     <style>
+        :root {
+            --cyan: #06B6D4;
+            --blue: #3B82F6;
+            --emerald: #10B981;
+            --amber: #F59E0B;
+            --red: #EF4444;
+            --orange: #F97316;
+            --yellow: #EAB308;
+            --teal: #14B8A6;
+            --bg: #050505;
+            --surface: #111111;
+            --surface2: #1a1a1a;
+            --border: #2a2a2a;
+            --text: #f5f5f5;
+            --text-dim: #737373;
+            --radius: 16px;
+        }
+
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            margin: 0; padding: 0; box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
         }
-        
+
+        html { 
+            background: var(--bg);
+            height: 100%;
+        }
+
         body {
-            margin: 0;
-            padding: 0;
+            font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100%;
+            min-height: -webkit-fill-available;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
             overscroll-behavior: none;
         }
-        
-        #root {
-            min-height: 100vh;
-            min-height: -webkit-fill-available;
-        }
-        
-        /* Loading screen */
+
+        .mono { font-family: 'Space Mono', monospace; }
+
+        /* Loading Screen */
         #loading {
-            position: fixed;
-            inset: 0;
-            background: linear-gradient(to bottom right, #0a0a0a, #171717, #0a0a0a);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: fixed; inset: 0;
+            background: var(--bg);
+            display: flex; align-items: center; justify-content: center;
             z-index: 9999;
-            color: white;
-            font-family: system-ui, -apple-system, sans-serif;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
         }
-        
-        .loader {
-            text-align: center;
-        }
-        
+        #loading.hide { opacity: 0; visibility: hidden; }
+        .loader { text-align: center; }
         .loader-icon {
-            font-size: 48px;
-            animation: pulse 2s ease-in-out infinite;
+            font-size: 56px;
+            animation: bounce 1.5s ease-in-out infinite;
         }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.8; }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
         }
-        
+        .loader-bar {
+            width: 120px; height: 3px;
+            background: var(--border);
+            border-radius: 4px;
+            margin: 24px auto 0;
+            overflow: hidden;
+        }
+        .loader-bar-inner {
+            width: 40%; height: 100%;
+            background: linear-gradient(90deg, var(--cyan), var(--blue));
+            border-radius: 4px;
+            animation: slide 1s ease-in-out infinite;
+        }
+        @keyframes slide {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(350%); }
+        }
         .loader-text {
-            margin-top: 20px;
-            font-size: 16px;
-            color: #06B6D4;
-            font-weight: 600;
+            margin-top: 16px;
+            font-size: 13px; font-weight: 600;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* App container */
+        #app { 
+            min-height: 100vh; padding: 16px 16px 100px;
+            opacity: 0; transition: opacity 0.4s ease;
+        }
+        #app.show { opacity: 1; }
+
+        /* Utility */
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-2 { gap: 8px; }
+        .gap-3 { gap: 12px; }
+        .gap-4 { gap: 16px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .mb-4 { margin-bottom: 16px; }
+        .mb-6 { margin-bottom: 24px; }
+        .w-full { width: 100%; }
+        .text-center { text-align: center; }
+        .relative { position: relative; }
+        .overflow-hidden { overflow: hidden; }
+
+        /* Cards */
+        .card {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+        }
+
+        /* Header */
+        .header { margin-bottom: 24px; }
+        .logo {
+            font-size: 28px; font-weight: 900;
+            background: linear-gradient(135deg, var(--cyan), var(--blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+        .logo-sub { font-size: 12px; color: var(--text-dim); font-weight: 600; letter-spacing: 1px; }
+
+        .menu-btn {
+            width: 40px; height: 40px;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: var(--text);
+            transition: transform 0.15s;
+        }
+        .menu-btn:active { transform: scale(0.92); }
+        .menu-btn svg { width: 20px; height: 20px; }
+
+        /* Stat cards */
+        .stat-card {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px;
+        }
+        .stat-label {
+            font-size: 11px; color: var(--text-dim); font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .stat-label svg { width: 14px; height: 14px; }
+        .stat-value {
+            font-size: 28px; font-weight: 900; line-height: 1;
+        }
+        .stat-value span { color: var(--text-dim); font-size: 16px; }
+
+        /* Phase banner */
+        .phase-banner {
+            background: linear-gradient(135deg, rgba(6,182,212,0.12), rgba(59,130,246,0.12));
+            border: 1.5px solid rgba(6,182,212,0.4);
+            border-radius: var(--radius);
+            padding: 16px;
+        }
+        .phase-label { font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .phase-name { font-size: 20px; font-weight: 900; margin: 4px 0 12px; }
+
+        .nav-btn {
+            flex: 1; padding: 10px;
+            border-radius: 12px; border: none;
+            font-weight: 700; font-size: 14px;
+            cursor: pointer; color: var(--text);
+            transition: transform 0.15s;
+            font-family: inherit;
+        }
+        .nav-btn:active { transform: scale(0.95); }
+        .nav-btn-back { background: var(--surface2); border: 1.5px solid var(--border); }
+        .nav-btn-next { background: linear-gradient(135deg, var(--cyan), var(--blue)); }
+
+        /* Section title */
+        .section-title {
+            font-size: 16px; font-weight: 800;
+            margin-bottom: 12px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .section-title svg { width: 18px; height: 18px; color: var(--cyan); }
+
+        /* Rule item */
+        .rule-item {
+            padding: 14px;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.2s, background 0.2s;
+            margin-bottom: 8px;
+            border: 1.5px solid var(--border);
+            background: var(--surface);
+        }
+        .rule-item:active { transform: scale(0.97); }
+        .rule-item.done {
+            background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(20,184,166,0.1));
+            border-color: var(--emerald);
+        }
+        .rule-header { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+        .rule-header svg { width: 20px; height: 20px; flex-shrink: 0; }
+        .rule-name { font-weight: 700; font-size: 15px; }
+        .rule-target {
+            margin-left: auto;
+            font-size: 11px; font-weight: 700;
+            background: var(--surface2);
+            padding: 3px 8px;
+            border-radius: 20px;
+            color: var(--text-dim);
+            white-space: nowrap;
+        }
+        .rule-item.done .rule-target { background: rgba(16,185,129,0.15); color: var(--emerald); }
+        .rule-desc { font-size: 13px; color: var(--text-dim); margin-left: 30px; }
+
+        /* Day cards */
+        .day-card {
+            padding: 12px;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: transform 0.15s;
+            border: 1.5px solid var(--border);
+            background: var(--surface);
+            position: relative;
+        }
+        .day-card:active { transform: scale(0.95); }
+        .day-card.perfect {
+            background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(20,184,166,0.12));
+            border-color: var(--emerald);
+        }
+        .day-card.good {
+            background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(6,182,212,0.12));
+            border-color: var(--blue);
+        }
+        .day-card.partial {
+            background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(249,115,22,0.12));
+            border-color: var(--amber);
+        }
+        .day-num { font-weight: 700; font-size: 13px; }
+        .day-score { font-size: 20px; font-weight: 900; text-align: right; }
+        .day-bar { height: 3px; background: var(--border); border-radius: 4px; margin: 8px 0 4px; overflow: hidden; }
+        .day-bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+        .day-bar-fill.perfect-bar { background: linear-gradient(90deg, var(--emerald), var(--teal)); }
+        .day-bar-fill.good-bar { background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+        .day-bar-fill.partial-bar { background: linear-gradient(90deg, var(--amber), var(--orange)); }
+        .day-pct { font-size: 10px; color: var(--text-dim); font-weight: 600; }
+        .day-badge {
+            position: absolute; top: -6px; right: -6px;
+            width: 22px; height: 22px;
+        }
+
+        /* Phase section label */
+        .phase-section-label {
+            display: inline-flex; align-items: center; gap: 8px;
+            margin-bottom: 10px;
+        }
+        .phase-pill {
+            font-size: 11px; font-weight: 700;
+            background: var(--surface2); border: 1px solid var(--border);
+            padding: 3px 10px; border-radius: 20px;
+            color: var(--text-dim);
+        }
+        .phase-section-name { font-size: 13px; font-weight: 700; color: var(--text-dim); }
+
+        /* Modal overlay */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 100;
+            display: flex; align-items: flex-end; justify-content: center;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.25s, visibility 0.25s;
+        }
+        .modal-overlay.open { opacity: 1; visibility: visible; }
+        .modal-sheet {
+            background: var(--surface);
+            width: 100%; max-width: 480px;
+            border-radius: 24px 24px 0 0;
+            padding: 20px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+            border-top: 1.5px solid var(--border);
+        }
+        .modal-overlay.open .modal-sheet { transform: translateY(0); }
+        .modal-handle {
+            width: 40px; height: 4px;
+            background: var(--border); border-radius: 4px;
+            margin: 0 auto 16px;
+        }
+        .modal-title { font-size: 22px; font-weight: 900; margin-bottom: 16px; }
+
+        /* Menu items */
+        .menu-item {
+            width: 100%; padding: 14px;
+            background: var(--surface2);
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            display: flex; align-items: center; gap: 12px;
+            cursor: pointer; color: var(--text);
+            font-weight: 700; font-size: 15px;
+            margin-bottom: 8px;
+            transition: transform 0.15s;
+            font-family: inherit;
+        }
+        .menu-item:active { transform: scale(0.97); }
+        .menu-item svg { width: 20px; height: 20px; }
+        .menu-item.danger {
+            background: rgba(239,68,68,0.08);
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        .modal-close-btn {
+            width: 100%; padding: 14px;
+            background: var(--surface2);
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            color: var(--text);
+            font-weight: 700; font-size: 15px;
+            cursor: pointer;
+            margin-top: 4px;
+            font-family: inherit;
+        }
+
+        .save-btn {
+            width: 100%; padding: 14px;
+            background: linear-gradient(135deg, var(--cyan), var(--blue));
+            border: none; border-radius: 14px;
+            color: white; font-weight: 800; font-size: 15px;
+            cursor: pointer; margin-top: 16px;
+            transition: transform 0.15s;
+            font-family: inherit;
+        }
+        .save-btn:active { transform: scale(0.97); }
+
+        /* Detail modal header */
+        .detail-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .detail-close {
+            width: 36px; height: 36px;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: var(--text-dim);
+            font-size: 18px; font-weight: 700;
+        }
+        .detail-phase-info {
+            background: var(--surface2);
+            border-radius: 12px; padding: 12px;
+            margin-bottom: 16px;
+        }
+        .detail-phase-label { font-size: 12px; color: var(--text-dim); margin-bottom: 2px; }
+        .detail-phase-name { font-weight: 700; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 0; }
+
+        /* Safe area for notch devices */
+        @supports (padding-top: env(safe-area-inset-top)) {
+            body { padding-top: env(safe-area-inset-top); }
         }
     </style>
 </head>
@@ -89,497 +395,477 @@
     <div id="loading">
         <div class="loader">
             <div class="loader-icon">🎯</div>
-            <div class="loader-text">PROVE IT lädt...</div>
+            <div class="loader-bar"><div class="loader-bar-inner"></div></div>
+            <div class="loader-text">Prove It</div>
         </div>
     </div>
-    
-    <div id="root"></div>
-    
-    <!-- Service Worker Registration -->
+
+    <div id="app"></div>
+
+    <!-- Service Worker -->
     <script>
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
+            window.addEventListener('load', function() {
                 navigator.serviceWorker.register('service-worker.js')
-                    .then(reg => console.log('Service Worker registered'))
-                    .catch(err => console.log('Service Worker registration failed:', err));
+                    .then(function(reg) { console.log('SW registered'); })
+                    .catch(function(err) { console.log('SW failed:', err); });
             });
         }
     </script>
-    
-    <!-- React Component -->
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-        const { CheckCircle2, Circle, TrendingUp, Flame, Target, Calendar, Award, AlertCircle, Download, Upload, Trash2 } = lucide;
 
-        function ProveItDashboard() {
-          const [currentDay, setCurrentDay] = useState(1);
-          const [trackingData, setTrackingData] = useState(() => {
-            const saved = localStorage.getItem('proveItTracking');
-            return saved ? JSON.parse(saved) : {};
-          });
-          const [selectedDate, setSelectedDate] = useState(null);
-          const [showDetails, setShowDetails] = useState(false);
-          const [showMenu, setShowMenu] = useState(false);
+    <!-- App (NO Babel, NO JSX, pure JS) -->
+    <script>
+    (function() {
+        'use strict';
 
-          useEffect(() => {
-            localStorage.setItem('proveItTracking', JSON.stringify(trackingData));
-          }, [trackingData]);
-          
-          useEffect(() => {
-            // Hide loading screen
-            const loading = document.getElementById('loading');
-            if (loading) {
-              loading.style.opacity = '0';
-              loading.style.transition = 'opacity 0.3s';
-              setTimeout(() => loading.remove(), 300);
-            }
-          }, []);
+        // ========== SVG ICONS (inline, no external deps) ==========
+        var ICONS = {
+            target: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+            check: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+            circle: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>',
+            calendar: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+            flame: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
+            trending: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+            award: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>',
+            awardFilled: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>',
+            alert: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+            download: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+            upload: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
+            trash: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+            menu: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>'
+        };
 
-          const phases = {
+        function icon(name, color) {
+            var span = document.createElement('span');
+            span.innerHTML = ICONS[name] || '';
+            span.style.display = 'inline-flex';
+            span.style.alignItems = 'center';
+            if (color) span.style.color = color;
+            return span;
+        }
+
+        // ========== DATA ==========
+        var phases = {
             1: {
-              name: 'Detox & Fundament',
-              days: [1, 2, 3, 4, 5, 6, 7],
-              rules: [
-                { id: 'silence', name: 'Input-Fasten', target: '45 Min', description: 'Keine Podcasts, Videos, News - nur Gehen, Atmen, Journaling' },
-                { id: 'scroll', name: 'No Scroll', target: '0 Min', description: 'Social Media komplett aus (außer notwendige Kommunikation)' },
-                { id: 'deepwork', name: 'Deep Work', target: '60 Min', description: 'Ein fokussierter Block, Handy weg' },
-                { id: 'movement', name: 'Bewegung', target: '30 Min', description: 'Workout ODER zügiger Walk' },
-                { id: 'order', name: 'Ordnung', target: '10 Min', description: 'Aufräumen, Putzen, Strukturieren' }
-              ]
+                name: 'Detox & Fundament',
+                days: [1,2,3,4,5,6,7],
+                rules: [
+                    { id:'silence', name:'Input-Fasten', target:'45 Min', desc:'Keine Podcasts, Videos, News – nur Gehen, Atmen, Journaling' },
+                    { id:'scroll', name:'No Scroll', target:'0 Min', desc:'Social Media komplett aus (außer notwendige Kommunikation)' },
+                    { id:'deepwork', name:'Deep Work', target:'60 Min', desc:'Ein fokussierter Block, Handy weg' },
+                    { id:'movement', name:'Bewegung', target:'30 Min', desc:'Workout ODER zügiger Walk' },
+                    { id:'order', name:'Ordnung', target:'10 Min', desc:'Aufräumen, Putzen, Strukturieren' }
+                ]
             },
             2: {
-              name: 'Output & Routine',
-              days: [8, 9, 10, 11, 12, 13, 14],
-              rules: [
-                { id: 'silence', name: 'Input-Fasten', target: '60 Min', description: 'Erweitert auf volle Stunde' },
-                { id: 'scroll', name: 'Controlled Scroll', target: '≤10 Min', description: 'Max 10 Min/Tag, mit Timer' },
-                { id: 'deepwork', name: 'Deep Work', target: '90 Min', description: 'Ein Block oder 2×45 Min' },
-                { id: 'movement', name: 'Aktive Tage', target: '4×/Woche', description: '4× Training + 3× Walk pro Woche' },
-                { id: 'order', name: 'Ordnung', target: '15 Min', description: 'Erweiterte Strukturierung' },
-                { id: 'courage', name: 'Mut-Aktion', target: '1×/Tag', description: 'Eine unangenehme, aber wichtige Sache erledigen' }
-              ]
+                name: 'Output & Routine',
+                days: [8,9,10,11,12,13,14],
+                rules: [
+                    { id:'silence', name:'Input-Fasten', target:'60 Min', desc:'Erweitert auf volle Stunde' },
+                    { id:'scroll', name:'Controlled Scroll', target:'≤10 Min', desc:'Max 10 Min/Tag, mit Timer' },
+                    { id:'deepwork', name:'Deep Work', target:'90 Min', desc:'Ein Block oder 2×45 Min' },
+                    { id:'movement', name:'Aktive Tage', target:'4×/Woche', desc:'4× Training + 3× Walk pro Woche' },
+                    { id:'order', name:'Ordnung', target:'15 Min', desc:'Erweiterte Strukturierung' },
+                    { id:'courage', name:'Mut-Aktion', target:'1×/Tag', desc:'Eine unangenehme, aber wichtige Sache erledigen' }
+                ]
             },
             3: {
-              name: 'Proof Season',
-              days: [15, 16, 17, 18, 19, 20, 21],
-              rules: [
-                { id: 'silence', name: 'Input-Fasten', target: '60 Min', description: 'Bleibt Pflicht' },
-                { id: 'scroll', name: 'Controlled Scroll', target: '≤10 Min', description: 'Bleibt limitiert' },
-                { id: 'deepwork', name: 'Deep Work', target: '2h', description: 'Maximale Fokuszeit für Ergebnis' },
-                { id: 'movement', name: 'Bewegung', target: '5×/Woche', description: 'Intensiv durchziehen' },
-                { id: 'order', name: 'Ordnung', target: '15 Min', description: 'Standard halten' },
-                { id: 'proof', name: 'Sichtbarer Proof', target: '1 Ziel', description: 'Ein messbares Ergebnis fertigstellen' }
-              ]
+                name: 'Proof Season',
+                days: [15,16,17,18,19,20,21],
+                rules: [
+                    { id:'silence', name:'Input-Fasten', target:'60 Min', desc:'Bleibt Pflicht' },
+                    { id:'scroll', name:'Controlled Scroll', target:'≤10 Min', desc:'Bleibt limitiert' },
+                    { id:'deepwork', name:'Deep Work', target:'2h', desc:'Maximale Fokuszeit für Ergebnis' },
+                    { id:'movement', name:'Bewegung', target:'5×/Woche', desc:'Intensiv durchziehen' },
+                    { id:'order', name:'Ordnung', target:'15 Min', desc:'Standard halten' },
+                    { id:'proof', name:'Sichtbarer Proof', target:'1 Ziel', desc:'Ein messbares Ergebnis fertigstellen' }
+                ]
             }
-          };
+        };
 
-          const getCurrentPhase = (day) => {
+        // ========== STATE ==========
+        var state = {
+            currentDay: 1,
+            trackingData: {},
+            showMenu: false,
+            showDetail: false,
+            selectedDay: null
+        };
+
+        function loadData() {
+            try {
+                var saved = localStorage.getItem('proveItTracking');
+                if (saved) state.trackingData = JSON.parse(saved);
+            } catch(e) {}
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem('proveItTracking', JSON.stringify(state.trackingData));
+            } catch(e) {}
+        }
+
+        // ========== HELPERS ==========
+        function getPhase(day) {
             if (day <= 7) return 1;
             if (day <= 14) return 2;
             return 3;
-          };
-
-          const currentPhase = phases[getCurrentPhase(currentDay)];
-
-          const toggleRule = (day, ruleId) => {
-            setTrackingData(prev => ({
-              ...prev,
-              [day]: {
-                ...prev[day],
-                [ruleId]: !prev[day]?.[ruleId]
-              }
-            }));
-          };
-
-          const getDayScore = (day) => {
-            const phase = getCurrentPhase(day);
-            const totalRules = phases[phase].rules.length;
-            const completed = phases[phase].rules.filter(rule => trackingData[day]?.[rule.id]).length;
-            return { completed, total: totalRules };
-          };
-
-          const getStreak = () => {
-            let streak = 0;
-            for (let i = currentDay; i >= 1; i--) {
-              const score = getDayScore(i);
-              if (score.completed >= Math.ceil(score.total * 0.7)) {
-                streak++;
-              } else {
-                break;
-              }
-            }
-            return streak;
-          };
-
-          const getTotalCompletion = () => {
-            let total = 0;
-            let completed = 0;
-            for (let day = 1; day <= currentDay; day++) {
-              const score = getDayScore(day);
-              total += score.total;
-              completed += score.completed;
-            }
-            return total > 0 ? Math.round((completed / total) * 100) : 0;
-          };
-          
-          const exportData = () => {
-            const dataStr = JSON.stringify(trackingData, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `prove-it-backup-${new Date().toISOString().split('T')[0]}.json`;
-            link.click();
-            URL.revokeObjectURL(url);
-          };
-          
-          const importData = () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'application/json';
-            input.onchange = (e) => {
-              const file = e.target.files[0];
-              const reader = new FileReader();
-              reader.onload = (event) => {
-                try {
-                  const imported = JSON.parse(event.target.result);
-                  setTrackingData(imported);
-                  alert('Daten erfolgreich importiert!');
-                } catch (err) {
-                  alert('Fehler beim Importieren der Daten');
-                }
-              };
-              reader.readAsText(file);
-            };
-            input.click();
-          };
-          
-          const resetData = () => {
-            if (confirm('Alle Daten wirklich löschen? Dies kann nicht rückgängig gemacht werden!')) {
-              setTrackingData({});
-              setCurrentDay(1);
-              alert('Alle Daten wurden gelöscht');
-            }
-          };
-
-          const DayCard = ({ day }) => {
-            const phase = getCurrentPhase(day);
-            const rules = phases[phase].rules;
-            const score = getDayScore(day);
-            const percentage = Math.round((score.completed / score.total) * 100);
-            const isPerfect = score.completed === score.total;
-            const isGood = percentage >= 70;
-            
-            return (
-              <div 
-                onClick={() => {
-                  setSelectedDate(day);
-                  setShowDetails(true);
-                }}
-                className={`relative p-4 rounded-lg cursor-pointer transition-all active:scale-95 ${
-                  isPerfect ? 'bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border-2 border-emerald-500' :
-                  isGood ? 'bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border-2 border-blue-400' :
-                  score.completed > 0 ? 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 border-2 border-amber-400' :
-                  'bg-neutral-800/50 border-2 border-neutral-700'
-                }`}
-              >
-                {isPerfect && (
-                  <div className="absolute -top-2 -right-2">
-                    <Award className="text-yellow-400 w-6 h-6" fill="currentColor" />
-                  </div>
-                )}
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-lg">Tag {day}</span>
-                  <span className="text-2xl font-black">{score.completed}/{score.total}</span>
-                </div>
-                <div className="w-full bg-neutral-700 rounded-full h-2 mb-2">
-                  <div 
-                    className={`h-2 rounded-full transition-all ${
-                      isPerfect ? 'bg-gradient-to-r from-emerald-400 to-teal-400' :
-                      isGood ? 'bg-gradient-to-r from-blue-400 to-cyan-400' :
-                      'bg-gradient-to-r from-amber-400 to-orange-400'
-                    }`}
-                    style={{ width: `${percentage}%` }}
-                  />
-                </div>
-                <p className="text-xs text-neutral-400">{percentage}% Complete</p>
-              </div>
-            );
-          };
-
-          const DetailModal = () => {
-            if (!selectedDate) return null;
-            
-            const phase = getCurrentPhase(selectedDate);
-            const rules = phases[phase].rules;
-            
-            return (
-              <div 
-                className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-                onClick={() => setShowDetails(false)}
-              >
-                <div 
-                  className="bg-neutral-900 rounded-2xl p-6 max-w-md w-full border-2 border-neutral-700 max-h-[90vh] overflow-y-auto"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-2xl font-black">Tag {selectedDate}</h3>
-                    <button 
-                      onClick={() => setShowDetails(false)}
-                      className="text-neutral-400 hover:text-white text-2xl w-8 h-8"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  
-                  <div className="mb-4 p-3 bg-neutral-800 rounded-lg">
-                    <p className="text-sm text-neutral-400 mb-1">Phase {phase}</p>
-                    <p className="font-bold">{phases[phase].name}</p>
-                  </div>
-
-                  <div className="space-y-3">
-                    {rules.map(rule => (
-                      <div 
-                        key={rule.id}
-                        onClick={() => toggleRule(selectedDate, rule.id)}
-                        className={`p-4 rounded-lg cursor-pointer transition-all active:scale-95 ${
-                          trackingData[selectedDate]?.[rule.id]
-                            ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-2 border-emerald-500'
-                            : 'bg-neutral-800 border-2 border-neutral-700 active:border-neutral-600'
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          {trackingData[selectedDate]?.[rule.id] ? (
-                            <CheckCircle2 className="w-6 h-6 text-emerald-400 flex-shrink-0 mt-1" />
-                          ) : (
-                            <Circle className="w-6 h-6 text-neutral-500 flex-shrink-0 mt-1" />
-                          )}
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-1">
-                              <p className="font-bold">{rule.name}</p>
-                              <span className="text-xs px-2 py-1 bg-neutral-700 rounded-full">
-                                {rule.target}
-                              </span>
-                            </div>
-                            <p className="text-sm text-neutral-400">{rule.description}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <button
-                    onClick={() => setShowDetails(false)}
-                    className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg font-bold active:scale-95 transition-all"
-                  >
-                    Speichern
-                  </button>
-                </div>
-              </div>
-            );
-          };
-
-          return (
-            <div className="min-h-screen bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 text-white p-4 pb-20">
-              <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;600;800;900&display=swap');
-                
-                * {
-                  font-family: 'Inter', sans-serif;
-                }
-                
-                .font-mono {
-                  font-family: 'Space Mono', monospace;
-                }
-              `}</style>
-
-              {/* Header */}
-              <div className="max-w-7xl mx-auto mb-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Target className="w-8 h-8 text-cyan-400" />
-                    <div>
-                      <h1 className="text-3xl font-black bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                        PROVE IT
-                      </h1>
-                      <p className="text-neutral-400 text-sm">21-Tage Challenge</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setShowMenu(!showMenu)}
-                    className="p-2 bg-neutral-800 rounded-lg active:scale-95 transition-all"
-                  >
-                    <div className="w-6 h-6 flex flex-col justify-center gap-1">
-                      <div className="w-full h-0.5 bg-white rounded"></div>
-                      <div className="w-full h-0.5 bg-white rounded"></div>
-                      <div className="w-full h-0.5 bg-white rounded"></div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-              
-              {/* Menu */}
-              {showMenu && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end" onClick={() => setShowMenu(false)}>
-                  <div className="bg-neutral-900 w-full rounded-t-3xl p-6 border-t-2 border-neutral-700" onClick={e => e.stopPropagation()}>
-                    <div className="w-12 h-1 bg-neutral-700 rounded-full mx-auto mb-6"></div>
-                    <div className="space-y-3">
-                      <button
-                        onClick={() => { exportData(); setShowMenu(false); }}
-                        className="w-full flex items-center gap-3 p-4 bg-neutral-800 rounded-lg active:scale-95 transition-all"
-                      >
-                        <Download className="w-5 h-5 text-blue-400" />
-                        <span className="font-semibold">Daten exportieren</span>
-                      </button>
-                      <button
-                        onClick={() => { importData(); setShowMenu(false); }}
-                        className="w-full flex items-center gap-3 p-4 bg-neutral-800 rounded-lg active:scale-95 transition-all"
-                      >
-                        <Upload className="w-5 h-5 text-emerald-400" />
-                        <span className="font-semibold">Daten importieren</span>
-                      </button>
-                      <button
-                        onClick={() => { resetData(); setShowMenu(false); }}
-                        className="w-full flex items-center gap-3 p-4 bg-red-900/20 border-2 border-red-500 rounded-lg active:scale-95 transition-all"
-                      >
-                        <Trash2 className="w-5 h-5 text-red-400" />
-                        <span className="font-semibold text-red-400">Alle Daten löschen</span>
-                      </button>
-                    </div>
-                    <button
-                      onClick={() => setShowMenu(false)}
-                      className="w-full mt-4 p-4 bg-neutral-800 rounded-lg font-semibold"
-                    >
-                      Schließen
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Stats Cards */}
-              <div className="max-w-7xl mx-auto grid grid-cols-2 gap-3 mb-6">
-                <div className="bg-gradient-to-br from-neutral-800 to-neutral-900 p-4 rounded-xl border-2 border-neutral-700">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Calendar className="w-4 h-4 text-blue-400" />
-                    <p className="text-xs text-neutral-400">Tag</p>
-                  </div>
-                  <p className="text-3xl font-black">{currentDay}<span className="text-neutral-500 text-lg">/21</span></p>
-                </div>
-
-                <div className="bg-gradient-to-br from-neutral-800 to-neutral-900 p-4 rounded-xl border-2 border-neutral-700">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Flame className="w-4 h-4 text-orange-400" />
-                    <p className="text-xs text-neutral-400">Streak</p>
-                  </div>
-                  <p className="text-3xl font-black">{getStreak()}</p>
-                </div>
-
-                <div className="bg-gradient-to-br from-neutral-800 to-neutral-900 p-4 rounded-xl border-2 border-neutral-700">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="w-4 h-4 text-emerald-400" />
-                    <p className="text-xs text-neutral-400">Gesamt</p>
-                  </div>
-                  <p className="text-3xl font-black">{getTotalCompletion()}<span className="text-neutral-500 text-lg">%</span></p>
-                </div>
-
-                <div className="bg-gradient-to-br from-neutral-800 to-neutral-900 p-4 rounded-xl border-2 border-neutral-700">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Award className="w-4 h-4 text-yellow-400" />
-                    <p className="text-xs text-neutral-400">Perfekt</p>
-                  </div>
-                  <p className="text-3xl font-black">
-                    {Array.from({ length: currentDay }, (_, i) => i + 1).filter(day => {
-                      const score = getDayScore(day);
-                      return score.completed === score.total;
-                    }).length}
-                  </p>
-                </div>
-              </div>
-
-              {/* Phase Info */}
-              <div className="max-w-7xl mx-auto mb-6">
-                <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-2 border-blue-500 rounded-xl p-4">
-                  <p className="text-xs text-neutral-400 mb-1">Phase {getCurrentPhase(currentDay)}</p>
-                  <h2 className="text-xl font-black mb-2">{currentPhase.name}</h2>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setCurrentDay(Math.max(1, currentDay - 1))}
-                      className="flex-1 px-4 py-2 bg-neutral-800 rounded-lg active:scale-95 transition-all text-sm font-bold"
-                    >
-                      ← Zurück
-                    </button>
-                    <button
-                      onClick={() => setCurrentDay(Math.min(21, currentDay + 1))}
-                      className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg active:scale-95 transition-all text-sm font-bold"
-                    >
-                      Weiter →
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Today's Rules */}
-              <div className="max-w-7xl mx-auto mb-6">
-                <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5 text-cyan-400" />
-                  Tag {currentDay}
-                </h3>
-                <div className="space-y-2">
-                  {currentPhase.rules.map(rule => (
-                    <div
-                      key={rule.id}
-                      onClick={() => toggleRule(currentDay, rule.id)}
-                      className={`p-4 rounded-lg cursor-pointer transition-all active:scale-95 ${
-                        trackingData[currentDay]?.[rule.id]
-                          ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-2 border-emerald-500'
-                          : 'bg-neutral-800/50 border-2 border-neutral-700'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 mb-2">
-                        {trackingData[currentDay]?.[rule.id] ? (
-                          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                        ) : (
-                          <Circle className="w-5 h-5 text-neutral-500" />
-                        )}
-                        <span className="font-bold">{rule.name}</span>
-                        <span className="ml-auto text-xs px-2 py-1 bg-neutral-700 rounded-full font-mono">
-                          {rule.target}
-                        </span>
-                      </div>
-                      <p className="text-sm text-neutral-400 ml-8">{rule.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* All Days Grid */}
-              <div className="max-w-7xl mx-auto">
-                <h3 className="text-lg font-bold mb-3">Alle Tage</h3>
-                
-                {[1, 2, 3].map(phaseNum => (
-                  <div key={phaseNum} className="mb-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="px-2 py-1 bg-neutral-800 rounded-full text-xs font-bold">
-                        Phase {phaseNum}
-                      </div>
-                      <h4 className="text-sm font-bold text-neutral-300">{phases[phaseNum].name}</h4>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {phases[phaseNum].days.map(day => (
-                        <DayCard key={day} day={day} />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {showDetails && <DetailModal />}
-            </div>
-          );
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<ProveItDashboard />);
+        function getDayScore(day) {
+            var p = getPhase(day);
+            var rules = phases[p].rules;
+            var done = 0;
+            for (var i = 0; i < rules.length; i++) {
+                if (state.trackingData[day] && state.trackingData[day][rules[i].id]) done++;
+            }
+            return { completed: done, total: rules.length };
+        }
+
+        function getStreak() {
+            var streak = 0;
+            for (var i = state.currentDay; i >= 1; i--) {
+                var s = getDayScore(i);
+                if (s.completed >= Math.ceil(s.total * 0.7)) streak++;
+                else break;
+            }
+            return streak;
+        }
+
+        function getTotalCompletion() {
+            var total = 0, completed = 0;
+            for (var d = 1; d <= state.currentDay; d++) {
+                var s = getDayScore(d);
+                total += s.total;
+                completed += s.completed;
+            }
+            return total > 0 ? Math.round((completed / total) * 100) : 0;
+        }
+
+        function getPerfectDays() {
+            var count = 0;
+            for (var d = 1; d <= state.currentDay; d++) {
+                var s = getDayScore(d);
+                if (s.completed === s.total && s.total > 0) count++;
+            }
+            return count;
+        }
+
+        function toggleRule(day, ruleId) {
+            if (!state.trackingData[day]) state.trackingData[day] = {};
+            state.trackingData[day][ruleId] = !state.trackingData[day][ruleId];
+            saveData();
+            render();
+        }
+
+        // ========== DOM HELPERS ==========
+        function el(tag, attrs, children) {
+            var e = document.createElement(tag);
+            if (attrs) {
+                for (var k in attrs) {
+                    if (k === 'className') e.className = attrs[k];
+                    else if (k === 'onclick') e.onclick = attrs[k];
+                    else if (k === 'style' && typeof attrs[k] === 'object') {
+                        for (var s in attrs[k]) e.style[s] = attrs[k][s];
+                    }
+                    else if (k === 'innerHTML') e.innerHTML = attrs[k];
+                    else e.setAttribute(k, attrs[k]);
+                }
+            }
+            if (children) {
+                if (!Array.isArray(children)) children = [children];
+                for (var i = 0; i < children.length; i++) {
+                    if (children[i] == null) continue;
+                    if (typeof children[i] === 'string' || typeof children[i] === 'number') {
+                        e.appendChild(document.createTextNode(children[i]));
+                    } else {
+                        e.appendChild(children[i]);
+                    }
+                }
+            }
+            return e;
+        }
+
+        // ========== EXPORT / IMPORT / RESET ==========
+        function exportData() {
+            var str = JSON.stringify(state.trackingData, null, 2);
+            var blob = new Blob([str], { type: 'application/json' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'prove-it-backup-' + new Date().toISOString().split('T')[0] + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData() {
+            var input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                var file = e.target.files[0];
+                if (!file) return;
+                var reader = new FileReader();
+                reader.onload = function(ev) {
+                    try {
+                        state.trackingData = JSON.parse(ev.target.result);
+                        saveData();
+                        render();
+                        alert('Daten erfolgreich importiert!');
+                    } catch(err) {
+                        alert('Fehler beim Importieren der Daten.');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function resetData() {
+            if (confirm('Alle Daten wirklich löschen? Dies kann nicht rückgängig gemacht werden!')) {
+                state.trackingData = {};
+                state.currentDay = 1;
+                saveData();
+                render();
+            }
+        }
+
+        // ========== RENDER ==========
+        function render() {
+            var app = document.getElementById('app');
+            app.innerHTML = '';
+
+            var phaseNum = getPhase(state.currentDay);
+            var currentPhase = phases[phaseNum];
+
+            // --- HEADER ---
+            var logoDiv = el('div', null, [
+                el('div', { className: 'flex items-center gap-3' }, [
+                    icon('target', 'var(--cyan)'),
+                    el('div', null, [
+                        el('div', { className: 'logo' }, 'PROVE IT'),
+                        el('div', { className: 'logo-sub' }, '21-TAGE CHALLENGE')
+                    ])
+                ])
+            ]);
+            var menuBtn = el('button', { className: 'menu-btn', onclick: function() { state.showMenu = true; render(); } });
+            menuBtn.appendChild(icon('menu'));
+            var header = el('div', { className: 'header flex items-center justify-between' }, [logoDiv, menuBtn]);
+            app.appendChild(header);
+
+            // --- STATS GRID ---
+            var statsGrid = el('div', { className: 'grid-2 mb-6' });
+
+            function statCard(iconName, iconColor, label, value, suffix) {
+                var card = el('div', { className: 'stat-card' });
+                var lbl = el('div', { className: 'stat-label' });
+                lbl.appendChild(icon(iconName, iconColor));
+                lbl.appendChild(document.createTextNode(label));
+                card.appendChild(lbl);
+                var val = el('div', { className: 'stat-value' });
+                val.appendChild(document.createTextNode(value));
+                if (suffix) val.appendChild(el('span', null, suffix));
+                card.appendChild(val);
+                return card;
+            }
+
+            statsGrid.appendChild(statCard('calendar', 'var(--blue)', 'Tag', state.currentDay, '/21'));
+            statsGrid.appendChild(statCard('flame', 'var(--orange)', 'Streak', getStreak(), ''));
+            statsGrid.appendChild(statCard('trending', 'var(--emerald)', 'Gesamt', getTotalCompletion(), '%'));
+            statsGrid.appendChild(statCard('award', 'var(--yellow)', 'Perfekt', getPerfectDays(), ''));
+            app.appendChild(statsGrid);
+
+            // --- PHASE BANNER ---
+            var phaseBanner = el('div', { className: 'phase-banner mb-6' }, [
+                el('div', { className: 'phase-label' }, 'Phase ' + phaseNum),
+                el('div', { className: 'phase-name' }, currentPhase.name),
+                el('div', { className: 'flex gap-2' }, [
+                    el('button', {
+                        className: 'nav-btn nav-btn-back',
+                        onclick: function() { state.currentDay = Math.max(1, state.currentDay - 1); render(); }
+                    }, '← Zurück'),
+                    el('button', {
+                        className: 'nav-btn nav-btn-next',
+                        onclick: function() { state.currentDay = Math.min(21, state.currentDay + 1); render(); }
+                    }, 'Weiter →')
+                ])
+            ]);
+            app.appendChild(phaseBanner);
+
+            // --- TODAY'S RULES ---
+            var titleDiv = el('div', { className: 'section-title' });
+            titleDiv.appendChild(icon('alert', 'var(--cyan)'));
+            titleDiv.appendChild(document.createTextNode('Tag ' + state.currentDay));
+            app.appendChild(titleDiv);
+
+            var rulesDiv = el('div', { className: 'mb-6' });
+            currentPhase.rules.forEach(function(rule) {
+                var isDone = state.trackingData[state.currentDay] && state.trackingData[state.currentDay][rule.id];
+                var item = el('div', {
+                    className: 'rule-item' + (isDone ? ' done' : ''),
+                    onclick: function() { toggleRule(state.currentDay, rule.id); }
+                });
+
+                var hdr = el('div', { className: 'rule-header' });
+                hdr.appendChild(icon(isDone ? 'check' : 'circle', isDone ? 'var(--emerald)' : 'var(--text-dim)'));
+                hdr.appendChild(el('span', { className: 'rule-name' }, rule.name));
+                hdr.appendChild(el('span', { className: 'rule-target mono' }, rule.target));
+                item.appendChild(hdr);
+                item.appendChild(el('div', { className: 'rule-desc' }, rule.desc));
+                rulesDiv.appendChild(item);
+            });
+            app.appendChild(rulesDiv);
+
+            // --- ALL DAYS ---
+            app.appendChild(el('div', { className: 'section-title mb-4' }, 'Alle Tage'));
+
+            [1, 2, 3].forEach(function(pNum) {
+                var section = el('div', { className: 'mb-6' });
+                var label = el('div', { className: 'phase-section-label' }, [
+                    el('span', { className: 'phase-pill' }, 'Phase ' + pNum),
+                    el('span', { className: 'phase-section-name' }, phases[pNum].name)
+                ]);
+                section.appendChild(label);
+
+                var grid = el('div', { className: 'grid-3' });
+                phases[pNum].days.forEach(function(day) {
+                    var score = getDayScore(day);
+                    var pct = score.total > 0 ? Math.round((score.completed / score.total) * 100) : 0;
+                    var isPerfect = score.completed === score.total && score.total > 0 && score.completed > 0;
+                    var isGood = pct >= 70 && !isPerfect;
+                    var isPartial = score.completed > 0 && !isGood && !isPerfect;
+
+                    var cls = 'day-card';
+                    if (isPerfect) cls += ' perfect';
+                    else if (isGood) cls += ' good';
+                    else if (isPartial) cls += ' partial';
+
+                    var barCls = 'day-bar-fill';
+                    if (isPerfect) barCls += ' perfect-bar';
+                    else if (isGood) barCls += ' good-bar';
+                    else barCls += ' partial-bar';
+
+                    var card = el('div', {
+                        className: cls,
+                        onclick: function() { state.selectedDay = day; state.showDetail = true; render(); }
+                    }, [
+                        el('div', { className: 'flex items-center justify-between' }, [
+                            el('span', { className: 'day-num' }, 'Tag ' + day),
+                            el('span', { className: 'day-score' }, score.completed + '/' + score.total)
+                        ]),
+                        el('div', { className: 'day-bar' }, [
+                            el('div', { className: barCls, style: { width: pct + '%' } })
+                        ]),
+                        el('div', { className: 'day-pct' }, pct + '% Complete')
+                    ]);
+
+                    if (isPerfect) {
+                        var badge = el('span', { className: 'day-badge' });
+                        badge.appendChild(icon('awardFilled', 'var(--yellow)'));
+                        badge.querySelector('svg').setAttribute('width', '22');
+                        badge.querySelector('svg').setAttribute('height', '22');
+                        card.appendChild(badge);
+                    }
+
+                    grid.appendChild(card);
+                });
+                section.appendChild(grid);
+                app.appendChild(section);
+            });
+
+            // --- MENU MODAL ---
+            renderMenuModal(app);
+
+            // --- DETAIL MODAL ---
+            renderDetailModal(app);
+        }
+
+        function renderMenuModal(app) {
+            var overlay = el('div', { className: 'modal-overlay' + (state.showMenu ? ' open' : '') });
+            overlay.onclick = function(e) { if (e.target === overlay) { state.showMenu = false; render(); } };
+            var sheet = el('div', { className: 'modal-sheet' }, [
+                el('div', { className: 'modal-handle' }),
+                el('div', { className: 'modal-title' }, 'Menü')
+            ]);
+
+            function menuItem(iconName, color, text, fn, danger) {
+                var btn = el('button', { className: 'menu-item' + (danger ? ' danger' : ''), onclick: function() { state.showMenu = false; render(); fn(); } });
+                btn.appendChild(icon(iconName, color));
+                btn.appendChild(document.createTextNode(text));
+                return btn;
+            }
+
+            sheet.appendChild(menuItem('download', 'var(--blue)', 'Daten exportieren', exportData));
+            sheet.appendChild(menuItem('upload', 'var(--emerald)', 'Daten importieren', importData));
+            sheet.appendChild(menuItem('trash', 'var(--red)', 'Alle Daten löschen', resetData, true));
+            sheet.appendChild(el('button', {
+                className: 'modal-close-btn',
+                onclick: function() { state.showMenu = false; render(); }
+            }, 'Schließen'));
+
+            overlay.appendChild(sheet);
+            app.appendChild(overlay);
+        }
+
+        function renderDetailModal(app) {
+            var overlay = el('div', { className: 'modal-overlay' + (state.showDetail ? ' open' : '') });
+            overlay.onclick = function(e) { if (e.target === overlay) { state.showDetail = false; render(); } };
+            var sheet = el('div', { className: 'modal-sheet' });
+            sheet.appendChild(el('div', { className: 'modal-handle' }));
+
+            if (state.selectedDay) {
+                var day = state.selectedDay;
+                var pNum = getPhase(day);
+                var rules = phases[pNum].rules;
+
+                var hdr = el('div', { className: 'detail-header' }, [
+                    el('div', { className: 'modal-title', style: { marginBottom: '0' } }, 'Tag ' + day),
+                    el('button', { className: 'detail-close', onclick: function() { state.showDetail = false; render(); } }, '✕')
+                ]);
+                sheet.appendChild(hdr);
+
+                sheet.appendChild(el('div', { className: 'detail-phase-info' }, [
+                    el('div', { className: 'detail-phase-label' }, 'Phase ' + pNum),
+                    el('div', { className: 'detail-phase-name' }, phases[pNum].name)
+                ]));
+
+                rules.forEach(function(rule) {
+                    var isDone = state.trackingData[day] && state.trackingData[day][rule.id];
+                    var item = el('div', {
+                        className: 'rule-item' + (isDone ? ' done' : ''),
+                        onclick: function() { toggleRule(day, rule.id); }
+                    });
+                    var hdr2 = el('div', { className: 'rule-header' });
+                    hdr2.appendChild(icon(isDone ? 'check' : 'circle', isDone ? 'var(--emerald)' : 'var(--text-dim)'));
+                    hdr2.appendChild(el('span', { className: 'rule-name' }, rule.name));
+                    hdr2.appendChild(el('span', { className: 'rule-target mono' }, rule.target));
+                    item.appendChild(hdr2);
+                    item.appendChild(el('div', { className: 'rule-desc' }, rule.desc));
+                    sheet.appendChild(item);
+                });
+
+                sheet.appendChild(el('button', {
+                    className: 'save-btn',
+                    onclick: function() { state.showDetail = false; render(); }
+                }, 'Fertig'));
+            }
+
+            overlay.appendChild(sheet);
+            app.appendChild(overlay);
+        }
+
+        // ========== INIT ==========
+        loadData();
+        render();
+
+        // Hide loading, show app
+        var loading = document.getElementById('loading');
+        var appEl = document.getElementById('app');
+        if (loading) loading.classList.add('hide');
+        if (appEl) appEl.classList.add('show');
+        setTimeout(function() { if (loading) loading.remove(); }, 500);
+
+    })();
     </script>
 </body>
 </html>
