@@ -53,8 +53,137 @@ wks.push({day:'Do',type:'rest',title:'Ruhe/Aktivierung',dur:15,exs:[{n:'Mobility
 wks.push({day:'Sa/So',type:'hybrid',title:'🏁 RACE DAY',dur:90,exs:[{n:'HYROX WETTKAMPF!',d:'10 MONATE TRAINING. PROVE IT! 💪🔥',t:''},{n:'Pacing: 5:30-6:00/km',d:'',t:''},{n:'Gel nach Station 4',d:'',t:''}]});}}
 return wks;}
 
-function getMeals(w){var pid=gHX(w).id;var t=pid<=2?{kcal:2200,p:160,c:240,f:75}:pid<=4?{kcal:2500,p:175,c:280,f:80}:{kcal:2300,p:165,c:250,f:78};
-return{meals:{training:[{type:'breakfast',name:'Power Porridge',desc:'80g Haferflocken + Whey + Banane + Erdnussbutter + Zimt',ma:{p:40,c:75,f:15}},{type:'lunch',name:'Hähnchen Bowl',desc:'200g Hähnchen + 150g Reis + Brokkoli + Paprika',ma:{p:50,c:70,f:10}},{type:'snack',name:'Post-Workout Shake',desc:'1.5 Scoops Whey + Banane + 200ml Milch + 30g Oats',ma:{p:40,c:55,f:8}},{type:'dinner',name:'Lachs + Süßkartoffel',desc:'200g Lachs + 200g Süßkartoffel + Spinat + Olivenöl',ma:{p:45,c:50,f:22}}],rest:[{type:'breakfast',name:'Rührei-Frühstück',desc:'4 Eier + 2 Vollkornbrot + ½ Avocado + Tomate',ma:{p:35,c:40,f:28}},{type:'lunch',name:'Thunfisch-Salat',desc:'200g Thunfisch + Salat + Kichererbsen + Feta',ma:{p:45,c:35,f:15}},{type:'snack',name:'Quark-Snack',desc:'250g Magerquark + Beeren + 15g Walnüsse + Honig',ma:{p:35,c:30,f:12}},{type:'dinner',name:'Putenpfanne',desc:'200g Pute + Zucchini + Champignons + 80g Nudeln',ma:{p:48,c:55,f:8}}]},totals:t};}
+function getMeals(w){
+var pid=gHX(w).id;
+var dayOfWeek=(w-1)%7; // 0-6, rotates through week
+var t=pid<=2?{kcal:2200,p:160,c:240,f:75}:pid<=4?{kcal:2500,p:175,c:280,f:80}:{kcal:2300,p:165,c:250,f:78};
+
+var DB={
+// PHASE 1 & 2: Deficit/moderate - higher protein, moderate carbs
+low:{
+breakfast:[
+{name:'Power Porridge',desc:'80g Haferflocken + Whey + Banane + 10g Erdnussbutter + Zimt',ma:{p:40,c:72,f:15}},
+{name:'Rührei-Wrap',desc:'3 Eier + Vollkorn-Tortilla + Spinat + Tomate + Feta',ma:{p:35,c:38,f:22}},
+{name:'Skyr-Bowl',desc:'250g Skyr + 40g Granola + Blaubeeren + 1 EL Honig + Chiasamen',ma:{p:32,c:55,f:8}},
+{name:'Protein-Pancakes',desc:'2 Eier + 1 Banane + 30g Whey + 40g Haferflocken, in Kokosöl',ma:{p:38,c:58,f:14}},
+{name:'Avocado-Toast',desc:'2 Vollkorntoast + 1/2 Avocado + 2 pochierte Eier + Chiliflocken',ma:{p:28,c:42,f:24}},
+{name:'Overnight Oats',desc:'80g Haferflocken + 200ml Milch + Whey + Beeren (abends vorbereiten)',ma:{p:38,c:68,f:12}},
+{name:'Türkisches Frühstück',desc:'3 Rühreier + 50g Feta + Gurke + Tomate + 1 Vollkornbrot',ma:{p:36,c:32,f:22}}
+],
+lunch:[
+{name:'Hähnchen-Bowl',desc:'200g Hähnchen + 150g Reis + Brokkoli + Paprika + Soja-Dressing',ma:{p:50,c:68,f:10}},
+{name:'Thunfisch-Wrap',desc:'150g Thunfisch + Vollkorn-Tortilla + Salat + Mais + leichte Mayo',ma:{p:42,c:45,f:14}},
+{name:'Puten-Curry',desc:'200g Putenbrust + Kokosmilch (light) + Süßkartoffel + Spinat + Basmatireis',ma:{p:48,c:62,f:12}},
+{name:'Griechischer Salat XL',desc:'200g Hähnchen + Feta + Gurke + Oliven + Quinoa + Zitronendressing',ma:{p:48,c:42,f:18}},
+{name:'Lachs-Reis-Bowl',desc:'150g Lachs + 150g Reis + Edamame + Avocado + Soja-Ingwer Sauce',ma:{p:42,c:60,f:20}},
+{name:'Burrito Bowl',desc:'200g Rinderhack (mager) + schwarze Bohnen + Reis + Salsa + Mais',ma:{p:46,c:65,f:14}},
+{name:'Asia-Nudel-Bowl',desc:'200g Hähnchen + Reisnudeln + Pak Choi + Erdnuss-Sauce',ma:{p:45,c:58,f:16}}
+],
+snack:[
+{name:'Post-WO Shake',desc:'1.5 Scoops Whey + 1 Banane + 200ml Milch + 30g Oats',ma:{p:40,c:52,f:8}},
+{name:'Quark-Beeren Mix',desc:'250g Magerquark + Beeren + 15g Walnüsse + Honig',ma:{p:35,c:28,f:12}},
+{name:'Protein-Riegel + Apfel',desc:'1 Proteinriegel (mind. 20g Protein) + 1 Apfel',ma:{p:24,c:38,f:10}},
+{name:'Hummus-Gemüse-Teller',desc:'100g Hummus + Karotten + Gurke + Paprika-Sticks + 1 Vollkornpita',ma:{p:14,c:42,f:16}},
+{name:'Thunfisch-Reis-Waffeln',desc:'100g Thunfisch auf 3 Reiswaffeln + Frischkäse + Gurke',ma:{p:28,c:30,f:6}},
+{name:'Trail Mix + Skyr',desc:'150g Skyr + 30g Nuss-Mix + 1 EL Honig',ma:{p:22,c:28,f:14}},
+{name:'Protein-Smoothie',desc:'Whey + Spinat + Banane + TK-Beeren + Mandelmilch',ma:{p:32,c:35,f:6}}
+],
+dinner:[
+{name:'Lachs + Süßkartoffel',desc:'200g Lachsfilet + 200g Süßkartoffel + Spinatsalat + Olivenöl',ma:{p:45,c:48,f:22}},
+{name:'Putenpfanne',desc:'200g Pute + Zucchini + Champignons + 80g Vollkornnudeln + Knoblauch',ma:{p:48,c:52,f:8}},
+{name:'Steak-Gemüse-Bowl',desc:'180g Rindersteak + Ofengemüse (Paprika, Zucchini, Zwiebel) + Quinoa',ma:{p:46,c:42,f:18}},
+{name:'Thai-Garnelen-Curry',desc:'200g Garnelen + Kokosmilch (light) + Thai-Basilikum + Jasminreis',ma:{p:40,c:55,f:14}},
+{name:'Hähnchen-Fajitas',desc:'200g Hähnchen + Paprika + Zwiebel + 2 Tortillas + Guacamole',ma:{p:45,c:48,f:18}},
+{name:'Fisch-Tacos',desc:'200g Kabeljau + Krautsalat + Limetten-Crema + Mais-Tortillas',ma:{p:42,c:45,f:12}},
+{name:'One-Pot Linsen-Eintopf',desc:'150g rote Linsen + Karotten + Tomaten + Kreuzkümmel + Fladenbrot',ma:{p:32,c:62,f:8}}
+]
+},
+// PHASE 3 & 4: Performance - more carbs, same protein
+high:{
+breakfast:[
+{name:'Loaded Porridge',desc:'100g Haferflocken + Whey + Banane + Blaubeeren + Honig + Mandeln',ma:{p:38,c:90,f:14}},
+{name:'Protein French Toast',desc:'3 Scheiben Vollkorntoast + 2 Eier + Whey-Teig + Beeren + Ahornsirup',ma:{p:40,c:82,f:16}},
+{name:'Smoothie-Bowl XL',desc:'Whey + Banane + TK-Mango + Granola + Kokos + Chiasamen',ma:{p:36,c:85,f:14}},
+{name:'Big Breakfast Wrap',desc:'3 Eier + Tortilla + Hähnchen + Käse + Avocado + Salsa',ma:{p:42,c:52,f:26}},
+{name:'Banana Pancakes',desc:'3 Eier + 2 Bananen + 50g Haferflocken + Whey + Beeren-Topping',ma:{p:40,c:78,f:14}},
+{name:'Bircher Müsli',desc:'100g Haferflocken + Joghurt + geriebener Apfel + Rosinen + Nüsse (abends prep)',ma:{p:28,c:88,f:16}},
+{name:'Shakshuka + Brot',desc:'3 Eier in Tomatensauce + Feta + 2 Scheiben Sauerteigbrot',ma:{p:34,c:52,f:22}}
+],
+lunch:[
+{name:'XXL Chicken-Rice-Bowl',desc:'250g Hähnchen + 200g Reis + Brokkoli + Teriyaki-Sauce + Sesam',ma:{p:55,c:85,f:12}},
+{name:'Loaded Burrito',desc:'200g Rinderhack + Reis + schwarze Bohnen + Käse + Salsa + Tortilla',ma:{p:48,c:80,f:18}},
+{name:'Pasta Bolognese',desc:'200g Rinderhack (mager) + 100g Vollkornnudeln + Tomatensauce + Parmesan',ma:{p:50,c:78,f:16}},
+{name:'Bibimbap',desc:'200g Rindfleisch + Reis + Spinat + Karotten + Spiegelei + Gochujang',ma:{p:48,c:82,f:18}},
+{name:'Hähnchen-Süßkartoffel-Bowl',desc:'250g Hähnchen + 250g Süßkartoffel + Avocado + Limettendressing',ma:{p:52,c:72,f:20}},
+{name:'Lachs-Poke-Bowl',desc:'200g Lachs + Sushireis + Edamame + Mango + Soja + Sesamöl',ma:{p:46,c:78,f:22}},
+{name:'Türkischer Köfte-Teller',desc:'200g Lammhack-Köfte + Bulgur + Tomaten-Gurken-Salat + Joghurt',ma:{p:48,c:68,f:20}}
+],
+snack:[
+{name:'Shake + Banane + Oats',desc:'1.5 Scoops Whey + 1 Banane + 200ml Milch + 40g Instant-Oats',ma:{p:42,c:65,f:8}},
+{name:'Reis-Kuchen Tower',desc:'4 Reiswaffeln + Erdnussbutter + Banane + Honig',ma:{p:16,c:62,f:14}},
+{name:'Protein Müsli',desc:'250g Skyr + 50g Crunchy-Müsli + TK-Beeren + Honig',ma:{p:34,c:52,f:8}},
+{name:'Energy Balls',desc:'5 Stk (Datteln + Haferflocken + Whey + Erdnussbutter + Kakao)',ma:{p:22,c:55,f:16}},
+{name:'Wrap-Rolle',desc:'Tortilla + 100g Truthahn-Aufschnitt + Frischkäse + Salat',ma:{p:28,c:38,f:10}},
+{name:'Smoothie groß',desc:'Whey + Banane + Haferflocken + Erdnussbutter + Milch',ma:{p:38,c:58,f:16}},
+{name:'Bagel + Lachs',desc:'1 Vollkorn-Bagel + 80g Räucherlachs + Frischkäse + Kapern',ma:{p:30,c:48,f:14}}
+],
+dinner:[
+{name:'Lachs-Teriyaki + Reis',desc:'200g Lachs + Teriyaki-Glasur + 150g Reis + gedämpfter Brokkoli',ma:{p:48,c:62,f:20}},
+{name:'Chicken Stir-Fry',desc:'250g Hähnchen + Reisnudeln + Gemüse + Soja-Ingwer-Sauce + Cashews',ma:{p:52,c:68,f:18}},
+{name:'Rindfleisch-Tacos',desc:'200g Rinderhack + Tortillas + Pico de Gallo + Käse + Guac',ma:{p:46,c:55,f:24}},
+{name:'One-Pot Hähnchen-Pasta',desc:'200g Hähnchen + 100g Penne + Sahne-Tomaten-Sauce + Spinat + Parmesan',ma:{p:48,c:68,f:18}},
+{name:'Garnelen-Pad-Thai',desc:'200g Garnelen + Reisnudeln + Ei + Erdnüsse + Limette + Sriracha',ma:{p:42,c:65,f:16}},
+{name:'Ofenhähnchen-Platte',desc:'250g Hähnchen-Keule + Kartoffeln + Karotten + Rosmarin + Olivenöl',ma:{p:50,c:58,f:18}},
+{name:'Marokkanischer Eintopf',desc:'200g Hähnchen + Kichererbsen + Süßkartoffel + Kreuzkümmel + Couscous',ma:{p:46,c:72,f:12}}
+]
+},
+// PHASE 5: Taper - moderate, familiar comfort food
+taper:{
+breakfast:[
+{name:'Klassisches Porridge',desc:'80g Haferflocken + Whey + Banane + Zimt + Honig',ma:{p:38,c:78,f:10}},
+{name:'Eier-Avocado-Toast',desc:'2 Vollkorntoast + 2 Eier + 1/2 Avocado + Salz+Pfeffer',ma:{p:28,c:42,f:24}},
+{name:'Joghurt-Müsli',desc:'250g Naturjoghurt + 50g Müsli + Banane + Honig',ma:{p:22,c:65,f:10}},
+{name:'Protein-Crêpes',desc:'2 Eier + 30g Whey + 30g Mehl + Beeren + Quark',ma:{p:38,c:45,f:12}},
+{name:'Smoothie Bowl',desc:'Whey + Banane + Erdbeeren + Granola + Kokosflocken',ma:{p:32,c:62,f:12}},
+{name:'Bagel + Ei',desc:'1 Vollkorn-Bagel + 2 Spiegeleier + Tomate + Rucola',ma:{p:28,c:48,f:18}},
+{name:'Bircher Müsli',desc:'80g Oats + Joghurt + Apfel + Rosinen + Walnüsse',ma:{p:22,c:68,f:14}}
+],
+lunch:[
+{name:'Hähnchen-Wrap',desc:'200g Hähnchen + Vollkorn-Wrap + Hummus + Salat + Tomate',ma:{p:48,c:52,f:14}},
+{name:'Nudelsalat',desc:'100g Fusilli + 150g Hähnchen + Pesto + Tomaten + Mozzarella',ma:{p:42,c:62,f:18}},
+{name:'Reis-Bowl einfach',desc:'200g Lachs + 150g Reis + Gurke + Avocado + Soja',ma:{p:44,c:58,f:20}},
+{name:'Kartoffel-Eintopf',desc:'Kartoffeln + Karotten + Lauch + 150g Hähnchen + leichte Brühe',ma:{p:38,c:58,f:8}},
+{name:'Couscous-Salat',desc:'150g Couscous + Kichererbsen + Feta + Gurke + Minze + Zitrone',ma:{p:28,c:65,f:14}},
+{name:'Sandwich Classic',desc:'Vollkornbrot + 150g Putenbrust + Käse + Salat + Senf',ma:{p:40,c:48,f:12}},
+{name:'Tomatensuppe + Grilled Cheese',desc:'Tomatensuppe + 2 Käse-Sandwiches (Vollkorn)',ma:{p:24,c:58,f:22}}
+],
+snack:[
+{name:'Quark + Beeren',desc:'250g Magerquark + TK-Beeren + Honig',ma:{p:32,c:28,f:4}},
+{name:'Protein Shake',desc:'1.5 Scoops Whey + 200ml Milch + Banane',ma:{p:38,c:40,f:6}},
+{name:'Nüsse + Obst',desc:'30g Mandeln + 1 Apfel + 1 Banane',ma:{p:8,c:48,f:16}},
+{name:'Reiswaffeln + PB',desc:'4 Reiswaffeln + 2 EL Erdnussbutter + Honig',ma:{p:12,c:48,f:18}},
+{name:'Joghurt-Dip + Gemüse',desc:'200g Griechischer Joghurt + Gurke + Karotten + Kräcker',ma:{p:18,c:32,f:12}},
+{name:'Protein-Pudding',desc:'Whey + 200ml Milch + 1 EL Kakaopulver + Chiasamen (kalt anrühren)',ma:{p:34,c:28,f:8}},
+{name:'Bananenbrot-Slice',desc:'1 Stück Protein-Bananenbrot (meal prep) + Butter',ma:{p:12,c:42,f:14}}
+],
+dinner:[
+{name:'Pasta Arrabiata + Hähnchen',desc:'200g Hähnchen + 100g Penne + scharfe Tomatensauce + Parmesan',ma:{p:48,c:62,f:12}},
+{name:'Fischfilet + Kartoffeln',desc:'200g Kabeljau + Ofenkartoffeln + grüne Bohnen + Zitrone',ma:{p:42,c:52,f:8}},
+{name:'Stir-Fry einfach',desc:'200g Hähnchen + TK-Wok-Gemüse + Sojasauce + Reis',ma:{p:46,c:58,f:10}},
+{name:'Omelette + Salat',desc:'4-Eier-Omelette + Käse + Schinken + großer Beilagensalat + Brot',ma:{p:42,c:38,f:24}},
+{name:'Chili con Carne',desc:'200g Rinderhack + Kidneybohnen + Tomaten + Reis + Schmand',ma:{p:46,c:62,f:16}},
+{name:'Lachs-Quinoa-Bowl',desc:'200g Lachs + Quinoa + Rucola + Kirschtomaten + Balsamico',ma:{p:44,c:48,f:20}},
+{name:'Puten-Geschnetzeltes',desc:'200g Pute + Champignon-Rahmsauce + Spätzle + Salat',ma:{p:46,c:58,f:14}}
+]
+}
+};
+
+var db=pid<=2?DB.low:pid<=4?DB.high:DB.taper;
+var idx=dayOfWeek;
+return{meals:{
+training:[{type:'breakfast',name:db.breakfast[idx].name,desc:db.breakfast[idx].desc,ma:db.breakfast[idx].ma},{type:'lunch',name:db.lunch[idx].name,desc:db.lunch[idx].desc,ma:db.lunch[idx].ma},{type:'snack',name:db.snack[idx].name,desc:db.snack[idx].desc,ma:db.snack[idx].ma},{type:'dinner',name:db.dinner[idx].name,desc:db.dinner[idx].desc,ma:db.dinner[idx].ma}],
+rest:[{type:'breakfast',name:db.breakfast[(idx+3)%7].name,desc:db.breakfast[(idx+3)%7].desc,ma:db.breakfast[(idx+3)%7].ma},{type:'lunch',name:db.lunch[(idx+3)%7].name,desc:db.lunch[(idx+3)%7].desc,ma:db.lunch[(idx+3)%7].ma},{type:'snack',name:db.snack[(idx+3)%7].name,desc:db.snack[(idx+3)%7].desc,ma:db.snack[(idx+3)%7].ma},{type:'dinner',name:db.dinner[(idx+3)%7].name,desc:db.dinner[(idx+3)%7].desc,ma:db.dinner[(idx+3)%7].ma}]
+},totals:t};}
 
 var BMS=[{id:'run5k',name:'5km Lauf',unit:'min:sek',ic:'trending'},{id:'pullups',name:'Klimmzüge max',unit:'Wdh',ic:'dumbbell'},{id:'pushups',name:'Liegestütze max',unit:'Wdh',ic:'dumbbell'},{id:'deadlift',name:'Kreuzheben 1RM',unit:'kg',ic:'dumbbell'},{id:'wallballs75',name:'75 Wall Balls',unit:'min:sek',ic:'clock'},{id:'bodyweight',name:'Körpergewicht',unit:'kg',ic:'trending'},{id:'hyroxsim',name:'HYROX Simulation',unit:'h:min:sek',ic:'flame'}];
 
