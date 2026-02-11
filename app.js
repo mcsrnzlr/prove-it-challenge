@@ -55,7 +55,7 @@ return wks;}
 
 function getMeals(w){
 var pid=gHX(w).id;
-var dayOfWeek=(w-1)%7; // 0-6, rotates through week
+var dayOfWeek=new Date().getDay(); // 0=So,1=Mo,...6=Sa - wechselt täglich automatisch
 var t=pid<=2?{kcal:2200,p:160,c:240,f:75}:pid<=4?{kcal:2500,p:175,c:280,f:80}:{kcal:2300,p:165,c:250,f:78};
 
 var DB={
